@@ -1,0 +1,27 @@
+# Python
+*.py[cod]
+__pycache__/
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE / OS specific
+.vscode/
+.idea/
+.DS_Store
+*.log
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Secrets
+secrets.yaml
+*.key
