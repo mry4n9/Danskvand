@@ -31,7 +31,7 @@ def get_linkedin_prompt(context_summary: str, funnel_stage: str, destination_lin
     Output a single JSON object with a key "linkedin_{funnel_stage.lower().replace(' ', '_')}_ads" containing a list of these {content_count} ad variations.
     Example for one variation:
     {{
-      "introductory_text": "🚀 Discover how [Company Benefit] can transform your business! Learn more about our innovative solutions. #Keyword #AnotherKeyword",
+      "introductory_text": "\\n🚀 Discover how [Company Benefit] can transform your business! Learn more about our innovative solutions.\\n",
       "image_copy": "Transform Your Business Today",
       "headline": "Innovative Solutions for Growth by [Company Name]",
       "destination_url": "{destination_link}",

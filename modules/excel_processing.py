@@ -12,7 +12,7 @@ def apply_header_style(cell):
     cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
 def apply_content_style(cell):
-    cell.alignment = Alignment(vertical="center", wrap_text=True) # Changed to top for better readability with wrapped text
+    cell.alignment = Alignment(vertical="center", indent=1, wrap_text=True) # Changed to top for better readability with wrapped text
     cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
 def adjust_column_width(worksheet):

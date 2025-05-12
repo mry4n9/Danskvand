@@ -15,8 +15,8 @@ if 'lead_objective_for_file' not in st.session_state:
     st.session_state.lead_objective_for_file = "general"
 
 # --- UI Sections ---
-st.title("🤖 AI-Powered Ad Content Generator")
-st.markdown("Tool for branding and marketing consultancy. Extract context, generate ad content, and download as XLSX.")
+st.title("M Funnel Generator")
+st.markdown("Extract source material for tailored content generation.")
 
 # --- API Key Check ---
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
@@ -223,9 +223,9 @@ if st.button("✨ Generate Ad Content", type="primary", use_container_width=True
 
 # --- Download Button ---
 if st.session_state.generated_excel_bytes:
-    file_name = f"{st.session_state.company_name_for_file}_{st.session_state.lead_objective_for_file}_ads.xlsx"
+    file_name = f"{st.session_state.company_name_for_file}_funnel.xlsx"
     st.download_button(
-        label="📥 Download Ad Content XLSX",
+        label="📥 Download Funnel",
         data=st.session_state.generated_excel_bytes,
         file_name=file_name,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
