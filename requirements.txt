@@ -1,0 +1,9 @@
+streamlit
+openai
+requests
+beautifulsoup4
+pypdf
+python-pptx
+openpyxl
+validators
+tldextract==3.4.4
