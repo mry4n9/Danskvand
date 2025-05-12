@@ -148,9 +148,13 @@ if st.button("✨ Generate Ad Content", type="primary", use_container_width=True
     completed_tasks = 0 # <<< CORRECTION: Define completed_tasks BEFORE the function that uses it nonlocally
 
     def update_progress(task_name):
-        nonlocal completed_tasks # Now this binding is found
+        # nonlocal completed_tasks # <<< REMOVE THIS LINE
+        # Directly access and modify completed_tasks from the enclosing scope
+        global completed_tasks # <<< USE GLOBAL INSTEAD
         completed_tasks += 1
         progress_value = 30 + int((completed_tasks / total_tasks) * 65) # 30% for context, 65% for generation
+        # Ensure progress doesn't exceed 100 if total_tasks is slightly off or rounding occurs
+        progress_value = min(progress_value, 95) # Cap generation progress before final step
         progress_bar.progress(progress_value, text=f"Generating {task_name}...")
 
     with st.spinner("Generating Email Content..."):
@@ -196,12 +200,15 @@ if st.button("✨ Generate Ad Content", type="primary", use_container_width=True
         update_progress("Google Display Ads")
 
     # --- 3. Create Excel Report ---
+    # Update progress before starting Excel formatting
     progress_bar.progress(95, text="Formatting Excel report...")
     with st.spinner("Creating Excel report..."):
         # Filter out None values from all_ad_content_json before passing
         valid_ad_content = {k: v for k, v in all_ad_content_json.items() if v is not None}
         if not valid_ad_content:
             st.error("No ad content was successfully generated. Cannot create Excel report.")
+            # Ensure progress bar completes even on error
+            progress_bar.progress(100, text="Generation failed. No content.")
             st.stop()
 
         excel_bytes = excel_processing.create_excel_report(
@@ -226,4 +233,4 @@ if st.session_state.generated_excel_bytes:
     )
 
 st.markdown("---")
-st.markdown("Developed as a branding and marketing consultancy tool.")
+st.markdown("1.1")
