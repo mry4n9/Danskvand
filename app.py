@@ -1,5 +1,5 @@
 import streamlit as st
-from modules import utils, data_extraction, ai_processing, excel_processing
+from modules import utils, data_extraction, ai_processing, excel_processing, document_processing # Added document_processing
 from prompts import email_prompts, linkedin_prompts, facebook_prompts, google_search_prompts, google_display_prompts
 import time
 
@@ -9,14 +9,16 @@ st.set_page_config(page_title="Branding & Marketing Ad Generator", layout="wide"
 # --- Initialize Session State ---
 if 'generated_excel_bytes' not in st.session_state:
     st.session_state.generated_excel_bytes = None
+if 'generated_transparency_doc_bytes' not in st.session_state: # New state for Word doc
+    st.session_state.generated_transparency_doc_bytes = None
 if 'company_name_for_file' not in st.session_state:
     st.session_state.company_name_for_file = "report"
 if 'lead_objective_for_file' not in st.session_state:
     st.session_state.lead_objective_for_file = "general"
 
 # --- UI Sections ---
-st.title("M Funnel Generator")
-st.markdown("Extract source material for tailored content generation.")
+st.title("🤖 AI-Powered Ad Content Generator")
+st.markdown("Tool for branding and marketing consultancy. Extract context, generate ad content, and download as XLSX.")
 
 # --- API Key Check ---
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
@@ -33,8 +35,8 @@ if not client:
 col1, col2 = st.columns(2)
 
 with col1:
-    st.header("1. Company Info")
-    client_url_input = st.text_input("Client's Website URL")
+    st.header("1. Company Context")
+    client_url_input = st.text_input("Client's Website URL", placeholder="https://www.example.com")
     additional_context_file = st.file_uploader("Upload Additional Company Context (PDF or PPTX)", type=["pdf", "pptx"], key="additional_context")
     lead_magnet_file = st.file_uploader("Upload Lead Magnet (PDF)", type=["pdf"], key="lead_magnet")
 
@@ -43,23 +45,26 @@ with col2:
     lead_objective_options = ["Demo Booking", "Sales Meeting"]
     lead_objective_input = st.selectbox("Lead Objective", lead_objective_options, key="lead_obj")
 
-    learn_more_link_input = st.text_input("Link to 'Learn More' Page", key="learn_more")
-    lead_magnet_download_link_input = st.text_input("Link to Lead Magnet Download", key="lead_magnet_dl")
+    learn_more_link_input = st.text_input("Link to 'Learn More' Page", placeholder="https://www.example.com/about-us", key="learn_more")
+    lead_magnet_download_link_input = st.text_input("Link to Lead Magnet Download", placeholder="https://www.example.com/download/ebook.pdf", key="lead_magnet_dl")
 
     if lead_objective_input == "Demo Booking":
         objective_link_label = "Link to Demo Booking Page"
+        objective_link_placeholder = "https://www.example.com/book-demo"
     else: # Sales Meeting
         objective_link_label = "Link to Sales Meeting Booking Page"
-    objective_specific_link_input = st.text_input(objective_link_label, key="obj_link")
+        objective_link_placeholder = "https://www.example.com/schedule-meeting"
+    objective_specific_link_input = st.text_input(objective_link_label, placeholder=objective_link_placeholder, key="obj_link")
 
-    content_count_input = st.slider("Ad Variations per Channel x Funnel Stage", 1, 20, 10, key="content_count")
+    content_count_input = st.slider("Ad Variations per Type/Funnel Stage", 1, 10, 3, key="content_count")
 
 # --- Generate Button & Progress ---
 st.header("3. Generate Content")
 
-if st.button("✨ Generate Ad Content", type="primary"):
-    # Reset previous generation ( use_container_width=True)
+if st.button("✨ Generate Ad Content & Reports", type="primary", use_container_width=True):
+    # Reset previous generation
     st.session_state.generated_excel_bytes = None
+    st.session_state.generated_transparency_doc_bytes = None
 
     # --- Input Validation ---
     valid_inputs = True
@@ -73,16 +78,13 @@ if st.button("✨ Generate Ad Content", type="primary"):
         valid_inputs = False
 
     learn_more_link = utils.validate_and_format_url(learn_more_link_input)
-    if not learn_more_link:
-        st.warning("Learn More link is recommended.") # Not strictly required
-
+    # Not strictly required, so no valid_inputs = False
+    
     lead_magnet_download_link = utils.validate_and_format_url(lead_magnet_download_link_input)
-    if not lead_magnet_download_link:
-        st.warning("Lead Magnet Download link is recommended for Demand Gen ads.")
+    # Not strictly required
 
     objective_specific_link = utils.validate_and_format_url(objective_specific_link_input)
-    if not objective_specific_link:
-        st.warning(f"{objective_link_label} is recommended for Demand Capture ads.")
+    # Not strictly required
 
     if not valid_inputs:
         st.stop()
@@ -92,143 +94,203 @@ if st.button("✨ Generate Ad Content", type="primary"):
 
     progress_bar = st.progress(0, text="Initializing...")
 
-    # --- 1. Context Extraction & Summarization ---
-    summaries = []
+    # --- 1. Context Extraction & Summarization (Individual) ---
+    website_text, website_summary = None, None
+    additional_text, additional_summary = None, None
+    lead_magnet_text, lead_magnet_summary = None, None
+    
+    extraction_progress_step = 5 # Progress per extraction/summarization pair
+
     with st.spinner("Extracting and summarizing website content..."):
-        progress_bar.progress(5, text="Extracting website content...")
+        progress_bar.progress(extraction_progress_step * 0, text="Extracting website content...")
         website_text = data_extraction.extract_text_from_url(client_url)
         if website_text:
-            progress_bar.progress(10, text="Summarizing website content...")
+            progress_bar.progress(extraction_progress_step * 1, text="Summarizing website content...")
             website_summary = ai_processing.summarize_text(website_text, client)
-            if website_summary:
-                summaries.append(f"Website Summary:\n{website_summary}")
             st.success("Website content processed.")
         else:
             st.warning("Could not extract text from website URL.")
-
+    
     if additional_context_file:
         with st.spinner("Extracting and summarizing additional context file..."):
-            progress_bar.progress(15, text="Extracting additional context...")
+            progress_bar.progress(extraction_progress_step * 2, text="Extracting additional context...")
             additional_text = data_extraction.extract_text_from_file(additional_context_file)
             if additional_text:
-                progress_bar.progress(20, text="Summarizing additional context...")
+                progress_bar.progress(extraction_progress_step * 3, text="Summarizing additional context...")
                 additional_summary = ai_processing.summarize_text(additional_text, client)
-                if additional_summary:
-                    summaries.append(f"Additional Context Summary:\n{additional_summary}")
                 st.success("Additional context file processed.")
             else:
                 st.warning("Could not extract text from additional context file.")
 
     if lead_magnet_file:
         with st.spinner("Extracting and summarizing lead magnet file..."):
-            progress_bar.progress(25, text="Extracting lead magnet content...")
+            progress_bar.progress(extraction_progress_step * 4, text="Extracting lead magnet content...")
             lead_magnet_text = data_extraction.extract_text_from_file(lead_magnet_file)
             if lead_magnet_text:
-                progress_bar.progress(30, text="Summarizing lead magnet content...")
+                progress_bar.progress(extraction_progress_step * 5, text="Summarizing lead magnet content...")
                 lead_magnet_summary = ai_processing.summarize_text(lead_magnet_text, client)
-                if lead_magnet_summary:
-                    summaries.append(f"Lead Magnet Summary:\n{lead_magnet_summary}")
                 st.success("Lead magnet file processed.")
             else:
                 st.warning("Could not extract text from lead magnet file.")
 
-    if not summaries:
-        st.error("No context could be extracted or summarized. Please provide at least a website URL.")
+    if not (website_summary or additional_summary or lead_magnet_summary):
+        st.error("No context could be summarized. Please provide valid inputs.")
+        progress_bar.progress(100, text="Failed: No context.")
         st.stop()
 
-    combined_summary = "\n\n---\n\n".join(summaries)
-    # st.subheader("Combined Summary for AI Prompts:")
-    # st.text_area("", combined_summary, height=200) # For debugging
+    # --- Create Transparency Document ---
+    current_progress = extraction_progress_step * 6
+    progress_bar.progress(current_progress, text="Generating transparency document...")
+    with st.spinner("Generating transparency Word document..."):
+        st.session_state.generated_transparency_doc_bytes = document_processing.create_transparency_document(
+            client_url,
+            website_text, website_summary,
+            additional_text, additional_summary,
+            lead_magnet_text, lead_magnet_summary
+        )
+        st.info("Transparency document generated.")
+    
+    # --- Define Context Strings for AI Prompts ---
+    # General context (URL + Additional)
+    general_context_parts = []
+    if website_summary:
+        general_context_parts.append(f"Company Website Summary:\n{website_summary}")
+    if additional_summary:
+        general_context_parts.append(f"Additional Company Context Summary:\n{additional_summary}")
+    
+    context_for_general_ads = "\n\n---\n\n".join(general_context_parts) if general_context_parts else "No general company context available."
+
+    # Demand Gen context (URL + Additional + Lead Magnet)
+    demand_gen_context_parts = []
+    if website_summary:
+        demand_gen_context_parts.append(f"Company Website Summary:\n{website_summary}")
+    if additional_summary:
+        demand_gen_context_parts.append(f"Additional Company Context Summary:\n{additional_summary}")
+    if lead_magnet_summary:
+        demand_gen_context_parts.append(f"Lead Magnet Summary (Primary Focus for this Ad):\n{lead_magnet_summary}")
+    else: # If no lead magnet summary, DG ads might not be effective, but we can try with general context
+        demand_gen_context_parts.append("NOTE: Lead magnet summary is missing. Ad copy will be based on general company context.")
+
+    context_for_demand_gen_ads = "\n\n---\n\n".join(demand_gen_context_parts) if demand_gen_context_parts else "No context available for Demand Gen ads."
+
 
     # --- 2. Generate Ad Content ---
     all_ad_content_json = {}
-    total_tasks = 8 # Email, 3x LinkedIn, 3x Facebook, Google Search, Google Display
-    completed_tasks = 0 # <<< CORRECTION: Define completed_tasks BEFORE the function that uses it nonlocally
+    # total_tasks for generation part (excluding context extraction and doc gen)
+    generation_tasks_total = 8 # Email, 3x LinkedIn, 3x Facebook, Google Search, Google Display
+    generation_tasks_completed = 0
+    
+    # Base progress after context extraction and doc gen (e.g., 35%)
+    base_progress_for_generation = current_progress 
+    # Remaining progress for generation (e.g., 60%)
+    remaining_progress_total = 95 - base_progress_for_generation 
 
-    def update_progress(task_name):
-        # nonlocal completed_tasks # <<< REMOVE THIS LINE
-        # Directly access and modify completed_tasks from the enclosing scope
-        global completed_tasks # <<< USE GLOBAL INSTEAD
-        completed_tasks += 1
-        progress_value = 30 + int((completed_tasks / total_tasks) * 65) # 30% for context, 65% for generation
-        # Ensure progress doesn't exceed 100 if total_tasks is slightly off or rounding occurs
-        progress_value = min(progress_value, 95) # Cap generation progress before final step
+
+    def update_generation_progress(task_name):
+        nonlocal generation_tasks_completed # Python 3 feature for nested functions
+        generation_tasks_completed += 1
+        progress_value = base_progress_for_generation + int((generation_tasks_completed / generation_tasks_total) * remaining_progress_total)
+        progress_value = min(progress_value, 95) # Cap before final Excel step
         progress_bar.progress(progress_value, text=f"Generating {task_name}...")
 
     with st.spinner("Generating Email Content..."):
-        email_prompt = email_prompts.get_email_prompt(combined_summary, lead_objective_input, objective_specific_link or client_url, content_count_input)
+        email_prompt = email_prompts.get_email_prompt(
+            context_for_general_ads, 
+            lead_objective_input, 
+            objective_specific_link or client_url, 
+            content_count_input
+        )
         all_ad_content_json["Email"] = ai_processing.generate_json_content(client, email_prompt, "Email Ads")
-        update_progress("Email Ads")
+        update_generation_progress("Email Ads")
 
     # LinkedIn Ads
     linkedin_stages = {
-        "BA": ("Brand Awareness", learn_more_link or client_url, "Learn More"),
-        "DG": ("Demand Gen", lead_magnet_download_link or client_url, "Download"),
-        "DC": ("Demand Capture", objective_specific_link or client_url, "Register, Request Demo")
+        "BA": ("Brand Awareness", learn_more_link or client_url, "Learn More", context_for_general_ads),
+        "DG": ("Demand Gen", lead_magnet_download_link or client_url, "Download", context_for_demand_gen_ads),
+        "DC": ("Demand Capture", objective_specific_link or client_url, "Register, Request Demo", context_for_general_ads)
     }
-    for key, (stage_name, link, cta) in linkedin_stages.items():
+    for key, (stage_name, link, cta, stage_context) in linkedin_stages.items():
         with st.spinner(f"Generating LinkedIn {stage_name} Ads..."):
-            prompt = linkedin_prompts.get_linkedin_prompt(combined_summary, stage_name, link, cta, content_count_input, lead_objective_input)
+            if not link and (key == "DG" or key == "DC"): # Ensure critical links are present
+                st.warning(f"Skipping LinkedIn {stage_name} as required link is missing.")
+                update_generation_progress(f"LinkedIn {stage_name} Ads (Skipped)")
+                time.sleep(0.1)
+                continue
+            prompt = linkedin_prompts.get_linkedin_prompt(stage_context, stage_name, link, cta, content_count_input, lead_objective_input)
             all_ad_content_json[f"LinkedIn_{key}"] = ai_processing.generate_json_content(client, prompt, f"LinkedIn {stage_name} Ads")
-            update_progress(f"LinkedIn {stage_name} Ads")
-            time.sleep(0.5) # Small delay if API rate limits are a concern
+            update_generation_progress(f"LinkedIn {stage_name} Ads")
+            time.sleep(0.5) 
 
     # Facebook Ads
     facebook_stages = {
-        "BA": ("Brand Awareness", learn_more_link or client_url, "Learn More"),
-        "DG": ("Demand Gen", lead_magnet_download_link or client_url, "Download"),
-        "DC": ("Demand Capture", objective_specific_link or client_url, "Book Now")
+        "BA": ("Brand Awareness", learn_more_link or client_url, "Learn More", context_for_general_ads),
+        "DG": ("Demand Gen", lead_magnet_download_link or client_url, "Download", context_for_demand_gen_ads),
+        "DC": ("Demand Capture", objective_specific_link or client_url, "Book Now", context_for_general_ads)
     }
-    for key, (stage_name, link, cta) in facebook_stages.items():
+    for key, (stage_name, link, cta, stage_context) in facebook_stages.items():
         with st.spinner(f"Generating Facebook {stage_name} Ads..."):
-            prompt = facebook_prompts.get_facebook_prompt(combined_summary, stage_name, link, cta, content_count_input, lead_objective_input)
+            if not link and (key == "DG" or key == "DC"):
+                st.warning(f"Skipping Facebook {stage_name} as required link is missing.")
+                update_generation_progress(f"Facebook {stage_name} Ads (Skipped)")
+                time.sleep(0.1)
+                continue
+            prompt = facebook_prompts.get_facebook_prompt(stage_context, stage_name, link, cta, content_count_input, lead_objective_input)
             all_ad_content_json[f"Facebook_{key}"] = ai_processing.generate_json_content(client, prompt, f"Facebook {stage_name} Ads")
-            update_progress(f"Facebook {stage_name} Ads")
+            update_generation_progress(f"Facebook {stage_name} Ads")
             time.sleep(0.5)
 
     with st.spinner("Generating Google Search Ad Components..."):
-        gsearch_prompt = google_search_prompts.get_google_search_prompt(combined_summary)
+        gsearch_prompt = google_search_prompts.get_google_search_prompt(context_for_general_ads)
         all_ad_content_json["GoogleSearch"] = ai_processing.generate_json_content(client, gsearch_prompt, "Google Search Ads")
-        update_progress("Google Search Ads")
+        update_generation_progress("Google Search Ads")
         time.sleep(0.5)
 
     with st.spinner("Generating Google Display Ad Components..."):
-        gdisplay_prompt = google_display_prompts.get_google_display_prompt(combined_summary)
+        gdisplay_prompt = google_display_prompts.get_google_display_prompt(context_for_general_ads)
         all_ad_content_json["GoogleDisplay"] = ai_processing.generate_json_content(client, gdisplay_prompt, "Google Display Ads")
-        update_progress("Google Display Ads")
-
+        update_generation_progress("Google Display Ads")
+    
     # --- 3. Create Excel Report ---
-    # Update progress before starting Excel formatting
     progress_bar.progress(95, text="Formatting Excel report...")
     with st.spinner("Creating Excel report..."):
-        # Filter out None values from all_ad_content_json before passing
         valid_ad_content = {k: v for k, v in all_ad_content_json.items() if v is not None}
         if not valid_ad_content:
             st.error("No ad content was successfully generated. Cannot create Excel report.")
-            # Ensure progress bar completes even on error
-            progress_bar.progress(100, text="Generation failed. No content.")
+            progress_bar.progress(100, text="Failed: No ad content for Excel.")
             st.stop()
-
+            
         excel_bytes = excel_processing.create_excel_report(
-            valid_ad_content,
-            st.session_state.company_name_for_file,
+            valid_ad_content, 
+            st.session_state.company_name_for_file, 
             lead_objective_input
         )
         st.session_state.generated_excel_bytes = excel_bytes
+    
+    progress_bar.progress(100, text="All reports generated!")
+    st.success("🎉 Ad content & transparency reports generated and ready for download!")
 
-    progress_bar.progress(100, text="Content generation complete!")
-    st.success("🎉 Ad content generated and Excel report is ready for download!")
-
-# --- Download Button ---
-if st.session_state.generated_excel_bytes:
-    file_name = f"{st.session_state.company_name_for_file}_funnel.xlsx"
+# --- Download Buttons ---
+if st.session_state.generated_transparency_doc_bytes:
+    doc_file_name = f"{st.session_state.company_name_for_file}_context_transparency_report.docx"
     st.download_button(
-        label="📥 Download Funnel",
+        label="📄 Download Transparency Report (DOCX)",
+        data=st.session_state.generated_transparency_doc_bytes,
+        file_name=doc_file_name,
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        use_container_width=True,
+        key="download_docx"
+    )
+
+if st.session_state.generated_excel_bytes:
+    excel_file_name = f"{st.session_state.company_name_for_file}_{st.session_state.lead_objective_for_file}_ads.xlsx"
+    st.download_button(
+        label="📊 Download Ad Content (XLSX)",
         data=st.session_state.generated_excel_bytes,
-        file_name=file_name,
+        file_name=excel_file_name,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True
+        use_container_width=True,
+        key="download_xlsx"
     )
 
 st.markdown("---")
-st.markdown("Made by M. Version 0.9")
+st.markdown("Developed as a branding and marketing consultancy tool.")

@@ -7,3 +7,4 @@ python-pptx
 openpyxl
 validators
 tldextract==3.4.4
+python-docx

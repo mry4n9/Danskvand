@@ -1,6 +1,6 @@
 def get_linkedin_prompt(context_summary: str, funnel_stage: str, destination_link: str, cta_button_options: str, content_count: int, lead_objective: str = None) -> str:
     
-    intro_text_guidance = "300-400 characters. Hook in the first 150 characters. Embed relevant emojis."
+    intro_text_guidance = "300-400 characters. Hook in the first 150 characters. Embed relevant emojis. Split into paragraphs for readability."
     headline_chars = "~70 characters."
     
     specific_instructions = ""

@@ -1,6 +1,6 @@
 def get_facebook_prompt(context_summary: str, funnel_stage: str, destination_link: str, cta_button_options: str, content_count: int, lead_objective: str = None) -> str:
     
-    primary_text_guidance = "300-400 characters. Hook in the first 125 characters. Embed relevant emojis."
+    primary_text_guidance = "300-400 characters. Hook in the first 125 characters. Embed relevant emojis. Split into paragraphs for readability."
     headline_chars = "~27 characters."
     link_description_chars = "~27 characters."
 
