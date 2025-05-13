@@ -52,13 +52,13 @@ with col2:
         objective_link_label = "Link to Sales Meeting Booking Page"
     objective_specific_link_input = st.text_input(objective_link_label, key="obj_link")
 
-    content_count_input = st.slider("Ad Variations per Channel x Funnel Stage", 1, 10, 10, key="content_count") # Max 10 for faster generation
+    content_count_input = st.slider("Ad Variations per Channel x Funnel Stage", 1, 20, 10, key="content_count")
 
 # --- Generate Button & Progress ---
 st.header("3. Generate Content")
 
-if st.button("✨ Generate Ad Content", type="primary", use_container_width=True):
-    # Reset previous generation
+if st.button("✨ Generate Ad Content", type="primary"):
+    # Reset previous generation ( use_container_width=True)
     st.session_state.generated_excel_bytes = None
 
     # --- Input Validation ---
