@@ -24,7 +24,7 @@ def get_facebook_prompt(context_summary: str, funnel_stage: str, destination_lin
 
     For each ad variation, provide a JSON object with the following keys: "primary_text", "image_copy", "headline", "link_description", "destination_url", "cta_button".
     - "primary_text": {primary_text_guidance}
-    - "image_copy": Compelling text for the ad image/creative (5-10 words).
+    - "image_copy": Compelling text for the accompanying ad image (5-10 words).
     - "headline": {headline_chars}
     - "link_description": {link_description_chars}
     - "destination_url": Use this exact URL: {destination_link}

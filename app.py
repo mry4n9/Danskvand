@@ -33,8 +33,8 @@ if not client:
 col1, col2 = st.columns(2)
 
 with col1:
-    st.header("1. Company Context")
-    client_url_input = st.text_input("Client's Website URL", placeholder="https://www.example.com")
+    st.header("1. Company Info")
+    client_url_input = st.text_input("Client's Website URL")
     additional_context_file = st.file_uploader("Upload Additional Company Context (PDF or PPTX)", type=["pdf", "pptx"], key="additional_context")
     lead_magnet_file = st.file_uploader("Upload Lead Magnet (PDF)", type=["pdf"], key="lead_magnet")
 
@@ -43,18 +43,16 @@ with col2:
     lead_objective_options = ["Demo Booking", "Sales Meeting"]
     lead_objective_input = st.selectbox("Lead Objective", lead_objective_options, key="lead_obj")
 
-    learn_more_link_input = st.text_input("Link to 'Learn More' Page", placeholder="https://www.example.com/about-us", key="learn_more")
-    lead_magnet_download_link_input = st.text_input("Link to Lead Magnet Download", placeholder="https://www.example.com/download/ebook.pdf", key="lead_magnet_dl")
+    learn_more_link_input = st.text_input("Link to 'Learn More' Page", key="learn_more")
+    lead_magnet_download_link_input = st.text_input("Link to Lead Magnet Download", key="lead_magnet_dl")
 
     if lead_objective_input == "Demo Booking":
         objective_link_label = "Link to Demo Booking Page"
-        objective_link_placeholder = "https://www.example.com/book-demo"
     else: # Sales Meeting
         objective_link_label = "Link to Sales Meeting Booking Page"
-        objective_link_placeholder = "https://www.example.com/schedule-meeting"
-    objective_specific_link_input = st.text_input(objective_link_label, placeholder=objective_link_placeholder, key="obj_link")
+    objective_specific_link_input = st.text_input(objective_link_label, key="obj_link")
 
-    content_count_input = st.slider("Ad Variations per Type/Funnel Stage", 1, 10, 3, key="content_count") # Max 10 for faster generation
+    content_count_input = st.slider("Ad Variations per Channel x Funnel Stage", 1, 10, 10, key="content_count") # Max 10 for faster generation
 
 # --- Generate Button & Progress ---
 st.header("3. Generate Content")
