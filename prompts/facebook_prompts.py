@@ -31,6 +31,7 @@ def get_facebook_prompt(context_summary: str, funnel_stage: str, destination_lin
     - "cta_button": Choose an appropriate CTA button text from the options: {cta_button_options}. If options allow empty for Brand Awareness, you can return an empty string.
 
     Output a single JSON object with a key "facebook_{funnel_stage.lower().replace(' ', '_')}_ads" containing a list of these {content_count} ad variations.
+    Wrap primary_text with "\ n" at the beginning and end to simulate vertical padding.
     Example for one variation:
     {{
       "primary_text": "✨ Unlock [Key Benefit] with our unique approach! See how we help businesses like yours succeed. #Marketing #SocialMedia",

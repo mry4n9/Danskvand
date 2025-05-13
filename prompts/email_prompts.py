@@ -16,6 +16,7 @@ def get_email_prompt(context_summary: str, lead_objective: str, objective_link: 
     - "cta": A condensed version of the call to action text from the body (e.g., "Book a Demo", "Schedule a Meeting").
 
     Output a single JSON object with a key "emails" containing a list of these {content_count} email variations.
+    Wrap body with "\ n" at the beginning and end to simulate vertical padding.
     Example for one variation:
     {{
       "headline": "Unlock Growth with Our Solution",
