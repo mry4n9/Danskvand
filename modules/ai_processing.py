@@ -2,7 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import json
 
-# Use the model name you have access to
+
 # For this example, we'll use "gpt-4o-mini" as a placeholder for "gpt-4.1-mini"
 # if "gpt-4.1-mini" is not yet available via API string.
 # Update this to "gpt-4.1-mini" when you confirm the exact model identifier.

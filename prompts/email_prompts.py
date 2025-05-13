@@ -12,7 +12,7 @@ def get_email_prompt(context_summary: str, lead_objective: str, objective_link: 
     For each email variation, provide a JSON object with the following keys: "headline", "subject_line", "body", "cta".
     - "headline": A compelling headline for the email (can be similar to subject or an internal title).
     - "subject_line": An engaging subject line for the email.
-    - "body": 2-3 paragraphs. Embed the link '{objective_link}' naturally within the body where appropriate for the call to action.
+    - "body": Start with "Hi [First Name],". 2-3 paragraphs. Embed the link '{objective_link}' naturally within the body where appropriate for the call to action.
     - "cta": A condensed version of the call to action text from the body (e.g., "Book a Demo", "Schedule a Meeting").
 
     Output a single JSON object with a key "emails" containing a list of these {content_count} email variations.
