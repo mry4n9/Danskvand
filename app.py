@@ -4,7 +4,7 @@ from prompts import email_prompts, linkedin_prompts, facebook_prompts, google_se
 import time
 
 # --- Page Config ---
-st.set_page_config(page_title="Branding & Marketing Ad Generator", layout="centered")
+st.set_page_config(page_title="Branding & Marketing Ad Generator", layout="wide")
 
 # --- Initialize Session State ---
 if 'generated_excel_bytes' not in st.session_state:
