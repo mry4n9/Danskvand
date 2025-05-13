@@ -178,7 +178,7 @@ if st.button("✨ Generate Ad Content & Reports", type="primary", use_container_
     all_ad_content_json = {}
     # total_tasks for generation part (excluding context extraction and doc gen)
     generation_tasks_total = 8 # Email, 3x LinkedIn, 3x Facebook, Google Search, Google Display
-    generation_tasks_completed = 0
+    generation_tasks_completed = 0 # <<< Defined here
     
     # Base progress after context extraction and doc gen (e.g., 35%)
     base_progress_for_generation = current_progress 
@@ -187,7 +187,8 @@ if st.button("✨ Generate Ad Content & Reports", type="primary", use_container_
 
 
     def update_generation_progress(task_name):
-        nonlocal generation_tasks_completed # Python 3 feature for nested functions
+        # nonlocal generation_tasks_completed # <<< REMOVE THIS LINE
+        global generation_tasks_completed # <<< USE THIS INSTEAD
         generation_tasks_completed += 1
         progress_value = base_progress_for_generation + int((generation_tasks_completed / generation_tasks_total) * remaining_progress_total)
         progress_value = min(progress_value, 95) # Cap before final Excel step
