@@ -12,7 +12,7 @@ def apply_header_style(cell):
     cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
 def apply_content_style(cell):
-    cell.alignment = Alignment(vertical="center", horizontal="center", wrap_text=True)
+    cell.alignment = Alignment(vertical="center", wrap_text=True) # Changed to top for better readability with wrapped text
     cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
 def adjust_column_width(worksheet):
@@ -45,13 +45,10 @@ def create_excel_report(ad_data: dict, company_name: str, lead_objective: str) -
         for cell in ws_email[1]: apply_header_style(cell)
 
         for i, ad in enumerate(ad_data["Email"].get("emails", [])):
-            if not ad or not isinstance(ad, dict):
-                continue  # Skip None or invalid entries
             ad_name = f"Email_Demand Capture_Ver. {i+1}"
             row = [ad_name, "Demand Capture", ad.get("headline"), ad.get("subject_line"), ad.get("body"), ad.get("cta")]
-            if any(row[2:]):  # Only add if there’s meaningful content
-                ws_email.append(row)
-
+            ws_email.append(row)
+        
         for row_idx in range(2, ws_email.max_row + 1):
             for col_idx in range(1, ws_email.max_column + 1):
                 apply_content_style(ws_email.cell(row=row_idx, column=col_idx))
@@ -123,8 +120,7 @@ def create_excel_report(ad_data: dict, company_name: str, lead_objective: str) -
         for i in range(max_rows):
             headline = headlines[i] if i < len(headlines) else ""
             description = descriptions[i] if i < len(descriptions) else ""
-            if headline or description:
-                ws_gsearch.append([headline, description])
+            ws_gsearch.append([headline, description])
 
         for row_idx in range(2, ws_gsearch.max_row + 1):
             for col_idx in range(1, ws_gsearch.max_column + 1):
@@ -145,8 +141,7 @@ def create_excel_report(ad_data: dict, company_name: str, lead_objective: str) -
         for i in range(max_rows):
             headline = headlines[i] if i < len(headlines) else ""
             description = descriptions[i] if i < len(descriptions) else ""
-            if headline or description:
-                ws_gdisplay.append([headline, description])
+            ws_gdisplay.append([headline, description])
 
         for row_idx in range(2, ws_gdisplay.max_row + 1):
             for col_idx in range(1, ws_gdisplay.max_column + 1):
