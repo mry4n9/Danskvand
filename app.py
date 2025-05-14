@@ -150,28 +150,16 @@ if st.button("✨ Generate Ad Content & Reports", type="primary", use_container_
         )
         st.info("Transparency document generated.")
     
-    # --- Define Context Strings for AI Prompts ---
-    # General context (URL + Additional)
-    general_context_parts = []
-    if website_summary:
-        general_context_parts.append(f"Company Website Summary:\n{website_summary}")
-    if additional_summary:
-        general_context_parts.append(f"Additional Company Context Summary:\n{additional_summary}")
+    # --- Define Context Variables for Prompts ---
+    # Ensure context values exist (set defaults for missing contexts)
+    website_summary = website_summary or "No website context available."
+    additional_summary = additional_summary or "No additional context available." 
+    lead_magnet_summary = lead_magnet_summary or "No lead magnet context available."
     
-    context_for_general_ads = "\n\n---\n\n".join(general_context_parts) if general_context_parts else "No general company context available."
-
-    # Demand Gen context (URL + Additional + Lead Magnet)
-    demand_gen_context_parts = []
-    if website_summary:
-        demand_gen_context_parts.append(f"Company Website Summary:\n{website_summary}")
-    if additional_summary:
-        demand_gen_context_parts.append(f"Additional Company Context Summary:\n{additional_summary}")
-    if lead_magnet_summary:
-        demand_gen_context_parts.append(f"Lead Magnet Summary (Primary Focus for this Ad):\n{lead_magnet_summary}")
-    else: # If no lead magnet summary, DG ads might not be effective, but we can try with general context
-        demand_gen_context_parts.append("NOTE: Lead magnet summary is missing. Ad copy will be based on general company context.")
-
-    context_for_demand_gen_ads = "\n\n---\n\n".join(demand_gen_context_parts) if demand_gen_context_parts else "No context available for Demand Gen ads."
+    # These variables will be used with our updated prompt functions 
+    # that take separate context variables
+    context_for_general_ads = website_summary
+    context_for_demand_gen_ads = website_summary
 
 
     # --- 2. Generate Ad Content ---
@@ -196,7 +184,8 @@ if st.button("✨ Generate Ad Content & Reports", type="primary", use_container_
 
     with st.spinner("Generating Email Content..."):
         email_prompt = email_prompts.get_email_prompt(
-            context_for_general_ads, 
+            website_summary,
+            additional_summary, 
             lead_objective_input, 
             objective_specific_link or client_url, 
             content_count_input
@@ -206,48 +195,106 @@ if st.button("✨ Generate Ad Content & Reports", type="primary", use_container_
 
     # LinkedIn Ads
     linkedin_stages = {
-        "BA": ("Brand Awareness", learn_more_link or client_url, "Learn More", context_for_general_ads),
-        "DG": ("Demand Gen", lead_magnet_download_link or client_url, "Download", context_for_demand_gen_ads),
-        "DC": ("Demand Capture", objective_specific_link or client_url, "Register, Request Demo", context_for_general_ads)
+        "BA": ("Brand Awareness", learn_more_link or client_url, "Learn More"),
+        "DG": ("Demand Gen", lead_magnet_download_link or client_url, "Download"),
+        "DC": ("Demand Capture", objective_specific_link or client_url, "Register, Request Demo")
     }
-    for key, (stage_name, link, cta, stage_context) in linkedin_stages.items():
+    for key, (stage_name, link, cta) in linkedin_stages.items():
         with st.spinner(f"Generating LinkedIn {stage_name} Ads..."):
             if not link and (key == "DG" or key == "DC"): # Ensure critical links are present
                 st.warning(f"Skipping LinkedIn {stage_name} as required link is missing.")
                 update_generation_progress(f"LinkedIn {stage_name} Ads (Skipped)")
                 time.sleep(0.1)
                 continue
-            prompt = linkedin_prompts.get_linkedin_prompt(stage_context, stage_name, link, cta, content_count_input, lead_objective_input)
+                
+            # Use separate contexts based on funnel stage
+            if key == "DG":
+                # For Demand Gen, include lead magnet summary
+                prompt = linkedin_prompts.get_linkedin_prompt(
+                    website_summary, 
+                    additional_summary, 
+                    stage_name, 
+                    link, 
+                    cta, 
+                    content_count_input, 
+                    lead_magnet_summary,
+                    lead_objective_input
+                )
+            else:
+                # For other stages, use without lead magnet
+                prompt = linkedin_prompts.get_linkedin_prompt(
+                    website_summary,
+                    additional_summary,
+                    stage_name, 
+                    link, 
+                    cta, 
+                    content_count_input,
+                    None,  
+                    lead_objective_input
+                )
+                
             all_ad_content_json[f"LinkedIn_{key}"] = ai_processing.generate_json_content(client, prompt, f"LinkedIn {stage_name} Ads")
             update_generation_progress(f"LinkedIn {stage_name} Ads")
-            time.sleep(0.5) 
+            time.sleep(0.5)
 
     # Facebook Ads
     facebook_stages = {
-        "BA": ("Brand Awareness", learn_more_link or client_url, "Learn More", context_for_general_ads),
-        "DG": ("Demand Gen", lead_magnet_download_link or client_url, "Download", context_for_demand_gen_ads),
-        "DC": ("Demand Capture", objective_specific_link or client_url, "Book Now", context_for_general_ads)
+        "BA": ("Brand Awareness", learn_more_link or client_url, "Learn More"),
+        "DG": ("Demand Gen", lead_magnet_download_link or client_url, "Download"),
+        "DC": ("Demand Capture", objective_specific_link or client_url, "Book Now")
     }
-    for key, (stage_name, link, cta, stage_context) in facebook_stages.items():
+    for key, (stage_name, link, cta) in facebook_stages.items():
         with st.spinner(f"Generating Facebook {stage_name} Ads..."):
             if not link and (key == "DG" or key == "DC"):
                 st.warning(f"Skipping Facebook {stage_name} as required link is missing.")
                 update_generation_progress(f"Facebook {stage_name} Ads (Skipped)")
                 time.sleep(0.1)
                 continue
-            prompt = facebook_prompts.get_facebook_prompt(stage_context, stage_name, link, cta, content_count_input, lead_objective_input)
+                
+            # Use separate contexts based on funnel stage
+            if key == "DG":
+                # For Demand Gen, include lead magnet summary
+                prompt = facebook_prompts.get_facebook_prompt(
+                    website_summary,
+                    additional_summary,
+                    stage_name, 
+                    link, 
+                    cta, 
+                    content_count_input,
+                    lead_magnet_summary,
+                    lead_objective_input
+                )
+            else:
+                # For other stages, use without lead magnet
+                prompt = facebook_prompts.get_facebook_prompt(
+                    website_summary,
+                    additional_summary,
+                    stage_name, 
+                    link, 
+                    cta, 
+                    content_count_input,
+                    None,
+                    lead_objective_input
+                )
+                
             all_ad_content_json[f"Facebook_{key}"] = ai_processing.generate_json_content(client, prompt, f"Facebook {stage_name} Ads")
             update_generation_progress(f"Facebook {stage_name} Ads")
             time.sleep(0.5)
 
     with st.spinner("Generating Google Search Ad Components..."):
-        gsearch_prompt = google_search_prompts.get_google_search_prompt(context_for_general_ads)
+        gsearch_prompt = google_search_prompts.get_google_search_prompt(
+            website_summary,
+            additional_summary
+        )
         all_ad_content_json["GoogleSearch"] = ai_processing.generate_json_content(client, gsearch_prompt, "Google Search Ads")
         update_generation_progress("Google Search Ads")
         time.sleep(0.5)
 
     with st.spinner("Generating Google Display Ad Components..."):
-        gdisplay_prompt = google_display_prompts.get_google_display_prompt(context_for_general_ads)
+        gdisplay_prompt = google_display_prompts.get_google_display_prompt(
+            website_summary,
+            additional_summary
+        )
         all_ad_content_json["GoogleDisplay"] = ai_processing.generate_json_content(client, gdisplay_prompt, "Google Display Ads")
         update_generation_progress("Google Display Ads")
     

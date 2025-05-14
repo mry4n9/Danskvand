@@ -1,11 +1,19 @@
-def get_google_search_prompt(context_summary: str) -> str:
+def get_google_search_prompt(context_url_summary: str, additional_context_summary: str) -> str:
+    context_section = f"""
+    Context URL Summary:
+    ---
+    {context_url_summary}
+    ---
+    
+    Additional Context Summary:
+    ---
+    {additional_context_summary}
+    ---"""
+
     return f"""
     You are an expert Google Search Ads copywriter. Based on the provided context, generate components for Responsive Search Ads (RSAs).
 
-    Context:
-    ---
-    {context_summary}
-    ---
+{context_section}
 
     Provide a single JSON object with two keys: "headlines" and "descriptions".
     - "headlines": A list of 15 unique headline strings. Each headline should be approximately 30 characters or less.

@@ -1,25 +1,59 @@
-def get_linkedin_prompt(context_summary: str, funnel_stage: str, destination_link: str, cta_button_options: str, content_count: int, lead_objective: str = None) -> str:
+def get_linkedin_prompt(context_url_summary: str, additional_context_summary: str, funnel_stage: str, destination_link: str, cta_button_options: str, content_count: int, lead_magnet_summary: str = None, lead_objective: str = None) -> str:
     
     intro_text_guidance = "300-400 characters. Hook in the first 150 characters. Embed relevant emojis. Split into paragraphs for readability."
     headline_chars = "~70 characters."
     
     specific_instructions = ""
+    context_section = ""
+    
     if funnel_stage == "Brand Awareness":
         specific_instructions = f"Focus on education, problem/solution awareness. Destination link is for learning more. CTA button should be '{cta_button_options}' or left empty if appropriate."
+        context_section = f"""
+    Context URL Summary:
+    ---
+    {context_url_summary}
+    ---
+    
+    Additional Context Summary:
+    ---
+    {additional_context_summary}
+    ---"""
     elif funnel_stage == "Demand Gen":
         specific_instructions = f"Focus on a lead magnet or valuable resource. Destination link is for download. CTA button should be '{cta_button_options}'."
+        context_section = f"""
+    Context URL Summary:
+    ---
+    {context_url_summary}
+    ---
+    
+    Additional Context Summary:
+    ---
+    {additional_context_summary}
+    ---
+    
+    Lead Magnet Summary (PRIORITIZE THIS CONTEXT):
+    ---
+    {lead_magnet_summary}
+    ---"""
     elif funnel_stage == "Demand Capture":
         specific_instructions = f"Focus on direct action like booking a demo or sales meeting ({lead_objective}). Destination link is for this action. CTA button should be one of '{cta_button_options}'."
+        context_section = f"""
+    Context URL Summary:
+    ---
+    {context_url_summary}
+    ---
+    
+    Additional Context Summary:
+    ---
+    {additional_context_summary}
+    ---"""
 
     return f"""
     You are an expert LinkedIn advertising copywriter. Based on the provided context, generate {content_count} variations of a LinkedIn ad for the {funnel_stage} funnel stage.
     {specific_instructions}
     The destination URL for this ad is: {destination_link}
 
-    Context:
-    ---
-    {context_summary}
-    ---
+{context_section}
 
     For each ad variation, provide a JSON object with the following keys: "introductory_text", "image_copy", "headline", "destination_url", "cta_button".
     - "introductory_text": {intro_text_guidance}

@@ -1,13 +1,21 @@
-def get_email_prompt(context_summary: str, lead_objective: str, objective_link: str, content_count: int) -> str:
+def get_email_prompt(context_url_summary: str, additional_context_summary: str, lead_objective: str, objective_link: str, content_count: int) -> str:
+    context_section = f"""
+    Context URL Summary:
+    ---
+    {context_url_summary}
+    ---
+    
+    Additional Context Summary:
+    ---
+    {additional_context_summary}
+    ---"""
+
     return f"""
     You are an expert email marketing copywriter. Based on the provided context, generate {content_count} variations of a demand capture email.
     The lead objective is: {lead_objective}.
     The primary call to action link is: {objective_link}
 
-    Context:
-    ---
-    {context_summary}
-    ---
+{context_section}
 
     For each email variation, provide a JSON object with the following keys: "headline", "subject_line", "body", "cta".
     - "headline": A compelling headline for the email (can be similar to subject or an internal title).
