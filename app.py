@@ -149,46 +149,29 @@ if st.button("✨ Generate Ad Content & Reports", type="primary", use_container_
             lead_magnet_text, lead_magnet_summary
         )
         st.info("Transparency document generated.")
-    
-    # --- Define Context Variables for Prompts ---
-    # Ensure context values exist (set defaults for missing contexts)
-    website_summary = website_summary or "No website context available."
-    additional_summary = additional_summary or "No additional context available." 
-    lead_magnet_summary = lead_magnet_summary or "No lead magnet context available."
-    
-    # These variables will be used with our updated prompt functions 
-    # that take separate context variables
-    context_for_general_ads = website_summary
-    context_for_demand_gen_ads = website_summary
-
 
     # --- 2. Generate Ad Content ---
     all_ad_content_json = {}
-    # total_tasks for generation part (excluding context extraction and doc gen)
     generation_tasks_total = 8 # Email, 3x LinkedIn, 3x Facebook, Google Search, Google Display
-    generation_tasks_completed = 0 # <<< Defined here
-    
-    # Base progress after context extraction and doc gen (e.g., 35%)
+    generation_tasks_completed = 0
     base_progress_for_generation = current_progress 
-    # Remaining progress for generation (e.g., 60%)
     remaining_progress_total = 95 - base_progress_for_generation 
 
-
     def update_generation_progress(task_name):
-        # nonlocal generation_tasks_completed # <<< REMOVE THIS LINE
-        global generation_tasks_completed # <<< USE THIS INSTEAD
+        global generation_tasks_completed
         generation_tasks_completed += 1
         progress_value = base_progress_for_generation + int((generation_tasks_completed / generation_tasks_total) * remaining_progress_total)
-        progress_value = min(progress_value, 95) # Cap before final Excel step
+        progress_value = min(progress_value, 95)
         progress_bar.progress(progress_value, text=f"Generating {task_name}...")
 
+    # Email
     with st.spinner("Generating Email Content..."):
         email_prompt = email_prompts.get_email_prompt(
-            website_summary,
-            additional_summary, 
-            lead_objective_input, 
-            objective_specific_link or client_url, 
-            content_count_input
+            context_url_summary=website_summary or "No website context available.",
+            additional_context_summary=additional_summary or "No additional context available.",
+            lead_objective=lead_objective_input,
+            objective_link=objective_specific_link or client_url,
+            content_count=content_count_input
         )
         all_ad_content_json["Email"] = ai_processing.generate_json_content(client, email_prompt, "Email Ads")
         update_generation_progress("Email Ads")
@@ -201,38 +184,33 @@ if st.button("✨ Generate Ad Content & Reports", type="primary", use_container_
     }
     for key, (stage_name, link, cta) in linkedin_stages.items():
         with st.spinner(f"Generating LinkedIn {stage_name} Ads..."):
-            if not link and (key == "DG" or key == "DC"): # Ensure critical links are present
+            if not link and (key == "DG" or key == "DC"):
                 st.warning(f"Skipping LinkedIn {stage_name} as required link is missing.")
                 update_generation_progress(f"LinkedIn {stage_name} Ads (Skipped)")
                 time.sleep(0.1)
                 continue
-                
-            # Use separate contexts based on funnel stage
             if key == "DG":
-                # For Demand Gen, include lead magnet summary
                 prompt = linkedin_prompts.get_linkedin_prompt(
-                    website_summary, 
-                    additional_summary, 
-                    stage_name, 
-                    link, 
-                    cta, 
-                    content_count_input, 
-                    lead_magnet_summary,
-                    lead_objective_input
+                    context_url_summary=website_summary or "No website context available.",
+                    additional_context_summary=additional_summary or "No additional context available.",
+                    funnel_stage=stage_name,
+                    destination_link=link,
+                    cta_button_options=cta,
+                    content_count=content_count_input,
+                    lead_magnet_summary=lead_magnet_summary or "No lead magnet context available.",
+                    lead_objective=lead_objective_input
                 )
             else:
-                # For other stages, use without lead magnet
                 prompt = linkedin_prompts.get_linkedin_prompt(
-                    website_summary,
-                    additional_summary,
-                    stage_name, 
-                    link, 
-                    cta, 
-                    content_count_input,
-                    None,  
-                    lead_objective_input
+                    context_url_summary=website_summary or "No website context available.",
+                    additional_context_summary=additional_summary or "No additional context available.",
+                    funnel_stage=stage_name,
+                    destination_link=link,
+                    cta_button_options=cta,
+                    content_count=content_count_input,
+                    lead_magnet_summary=None,
+                    lead_objective=lead_objective_input
                 )
-                
             all_ad_content_json[f"LinkedIn_{key}"] = ai_processing.generate_json_content(client, prompt, f"LinkedIn {stage_name} Ads")
             update_generation_progress(f"LinkedIn {stage_name} Ads")
             time.sleep(0.5)
@@ -250,50 +228,47 @@ if st.button("✨ Generate Ad Content & Reports", type="primary", use_container_
                 update_generation_progress(f"Facebook {stage_name} Ads (Skipped)")
                 time.sleep(0.1)
                 continue
-                
-            # Use separate contexts based on funnel stage
             if key == "DG":
-                # For Demand Gen, include lead magnet summary
                 prompt = facebook_prompts.get_facebook_prompt(
-                    website_summary,
-                    additional_summary,
-                    stage_name, 
-                    link, 
-                    cta, 
-                    content_count_input,
-                    lead_magnet_summary,
-                    lead_objective_input
+                    context_url_summary=website_summary or "No website context available.",
+                    additional_context_summary=additional_summary or "No additional context available.",
+                    funnel_stage=stage_name,
+                    destination_link=link,
+                    cta_button_options=cta,
+                    content_count=content_count_input,
+                    lead_magnet_summary=lead_magnet_summary or "No lead magnet context available.",
+                    lead_objective=lead_objective_input
                 )
             else:
-                # For other stages, use without lead magnet
                 prompt = facebook_prompts.get_facebook_prompt(
-                    website_summary,
-                    additional_summary,
-                    stage_name, 
-                    link, 
-                    cta, 
-                    content_count_input,
-                    None,
-                    lead_objective_input
+                    context_url_summary=website_summary or "No website context available.",
+                    additional_context_summary=additional_summary or "No additional context available.",
+                    funnel_stage=stage_name,
+                    destination_link=link,
+                    cta_button_options=cta,
+                    content_count=content_count_input,
+                    lead_magnet_summary=None,
+                    lead_objective=lead_objective_input
                 )
-                
             all_ad_content_json[f"Facebook_{key}"] = ai_processing.generate_json_content(client, prompt, f"Facebook {stage_name} Ads")
             update_generation_progress(f"Facebook {stage_name} Ads")
             time.sleep(0.5)
 
+    # Google Search Ads
     with st.spinner("Generating Google Search Ad Components..."):
         gsearch_prompt = google_search_prompts.get_google_search_prompt(
-            website_summary,
-            additional_summary
+            context_url_summary=website_summary or "No website context available.",
+            additional_context_summary=additional_summary or "No additional context available."
         )
         all_ad_content_json["GoogleSearch"] = ai_processing.generate_json_content(client, gsearch_prompt, "Google Search Ads")
         update_generation_progress("Google Search Ads")
         time.sleep(0.5)
 
+    # Google Display Ads
     with st.spinner("Generating Google Display Ad Components..."):
         gdisplay_prompt = google_display_prompts.get_google_display_prompt(
-            website_summary,
-            additional_summary
+            context_url_summary=website_summary or "No website context available.",
+            additional_context_summary=additional_summary or "No additional context available."
         )
         all_ad_content_json["GoogleDisplay"] = ai_processing.generate_json_content(client, gdisplay_prompt, "Google Display Ads")
         update_generation_progress("Google Display Ads")
