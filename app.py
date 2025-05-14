@@ -17,8 +17,8 @@ if 'lead_objective_for_file' not in st.session_state:
     st.session_state.lead_objective_for_file = "general"
 
 # --- UI Sections ---
-st.title("🤖 AI-Powered Ad Content Generator")
-st.markdown("Tool for branding and marketing consultancy. Extract context, generate ad content, and download as XLSX.")
+st.title("M Funnel Generator")
+st.markdown("Extract source material for tailored content generation.")
 
 # --- API Key Check ---
 openai_api_key = st.secrets.get("OPENAI_API_KEY")
@@ -294,4 +294,4 @@ if st.session_state.generated_excel_bytes:
     )
 
 st.markdown("---")
-st.markdown("Developed as a branding and marketing consultancy tool.")
+st.markdown("Made by M. Version 0.9")
