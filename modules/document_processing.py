@@ -24,14 +24,14 @@ def create_transparency_document(
             
             if text_content:
                 doc.add_heading(text_header, level=2)
-                p_text = doc.add_paragraph(str(text_content)[:50000]) # Limit length to prevent huge docs
-                p_text.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                p_text = doc.add_paragraph(str(text_content)[:90000]) # Limit length to prevent huge docs
+                p_text.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 doc.add_paragraph() # Add some space
             
             if summary_content:
                 doc.add_heading(summary_header, level=2)
                 p_summary = doc.add_paragraph(str(summary_content))
-                p_summary.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                p_summary.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 doc.add_paragraph() # Add some space
             doc.add_page_break()
 
